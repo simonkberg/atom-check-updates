@@ -12,7 +12,6 @@ import {execFile, execFileSync, spawn} from 'child_process'
 const pkg = require(path.join(__dirname, '../package.json'))
 
 program
-  .version(pkg.version)
   .option('-b, --beta', 'Check for beta releases')
   .option('-y, --force-yes', 'Update without user confirmation')
   .parse(process.argv)
