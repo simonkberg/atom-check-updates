@@ -1,6 +1,4 @@
-# atom-check-updates
-
-[![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
+# atom-check-updates [![npm package][npm-badge]][npm]
 
 A CLI for easily updating [Atom][atom] to the latest version
 on RPM or Debian-based systems.
