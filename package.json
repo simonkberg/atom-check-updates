@@ -1,7 +1,7 @@
 {
   "name": "atom-check-updates",
   "version": "0.0.1",
-  "description": "CLI for easily updating atom on rpm or debian-based systems.",
+  "description": "CLI for easily updating Atom on RPM or Debian-based systems.",
   "main": "index.js",
   "global": true,
   "bin": {
@@ -10,15 +10,20 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src",
     "build": "babel src -d lib",
-    "build:watch": "npm run build -- -w"
+    "build:watch": "npm run build -- -w",
+    "prepublish": "npm run build"
   },
+  "repository": "simonkberg/atom-check-updates",
   "keywords": [
     "atom",
     "cli",
     "debian",
-    "updater",
-    "ubuntu"
+    "update",
+    "ubuntu",
+    "redhat",
+    "rpm"
   ],
   "author": "Simon Kjellberg <simon.kjellberg@gmail.com>",
   "license": "MIT",
