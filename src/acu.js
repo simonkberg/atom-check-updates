@@ -225,15 +225,19 @@ module.exports = async function init () {
 
   log(headline('Downloading:'))
 
-  const file = await download(latest, distro)
-  const result = await install(file, distro)
+  try {
+    const file = await download(latest, distro)
+    const result = await install(file, distro)
 
-  if (result === 0) {
-    log(success('Installation completed successfully!'))
+    if (result === 0) {
+      log(success('Installation completed successfully!'))
 
-    fs.unlinkSync(file)
+      fs.unlinkSync(file)
 
-    process.exit(0)
+      process.exit(0)
+    }
+  } catch (err) {
+    throw err
   }
 
   log(error('An unknown error occured'))
