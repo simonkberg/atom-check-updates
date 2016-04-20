@@ -1,6 +1,6 @@
 {
   "name": "atom-check-updates",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI for easily updating Atom on RPM or Debian-based systems.",
   "main": "index.js",
   "preferGlobal": true,
@@ -15,7 +15,6 @@
     "atom-check-updates": "index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src",
     "build": "babel src -d lib",
     "build:watch": "npm run build -- -w",
