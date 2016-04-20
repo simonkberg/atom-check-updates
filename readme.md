@@ -1,4 +1,4 @@
-# atom-check-updates [![npm package][npm-badge]][npm]
+# atom-check-updates [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
 
 A CLI for easily updating [Atom][atom] to the latest version
 on RPM or Debian-based systems.
@@ -37,5 +37,7 @@ $ acu --beta --force-yes
 [atom-updater]: https://github.com/mehcode/atom-updater
 [atom]: https://atom.io
 [license]: ./LICENSE
+[build-badge]: https://img.shields.io/travis/simonkberg/atom-check-updates/master.svg?style=flat-square
+[build]: https://travis-ci.org/simonkberg/atom-check-updates
 [npm-badge]: https://img.shields.io/npm/v/atom-check-updates.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/atom-check-updates
