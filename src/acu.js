@@ -18,6 +18,7 @@ const RELEASES_API = 'https://api.github.com/repos/atom/atom/releases'
 const DOWNLOAD_URL = 'https://github.com/atom/atom/releases/download'
 const RELEASE_URL = 'https://github.com/atom/atom/releases/tag'
 const USER_AGENT = `atom-check-updates/${pkg.version}`
+const TEMP_FOLDER = '/tmp/acu'
 const DISTRO_DEBIAN = Symbol('deb')
 const DISTRO_RPM = Symbol('rpm')
 
@@ -128,8 +129,17 @@ async function download (version, distro) {
       headers: { 'User-Agent': USER_AGENT }
     }
 
-    const tmp = fs.mkdtempSync('/tmp/acu-')
-    const dest = path.join(tmp, `${version}-${file}`)
+    try {
+      fs.accessSync(TEMP_FOLDER, fs.W_OK)
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        fs.mkdirSync(TEMP_FOLDER)
+      } else {
+        throw err
+      }
+    }
+
+    const dest = path.join(TEMP_FOLDER, `${version}-${file}`)
     const req = request(opts)
 
     req.on('response', (res) => {
@@ -237,7 +247,10 @@ module.exports = async function init () {
       process.exit(0)
     }
   } catch (err) {
-    throw err
+    log(error('An unexpected error occured'))
+    log(info(err.toString()))
+
+    process.exit(1)
   }
 
   log(error('An unknown error occured'))
