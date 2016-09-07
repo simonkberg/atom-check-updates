@@ -74,7 +74,7 @@ async function getCurrentVersion () {
     execFile(bin, ['--version'], (error, stdout, stderr) => {
       if (error || stderr) return resolve(null)
 
-      const version = stdout.match(/^Atom\s+:\s+(\d\.\d\.\d(?:-\w+\d+)?)$/m)
+      const version = stdout.match(/^Atom\s+:\s+(\d+\.\d+\.\d+(?:-\w+\d+)?)$/m)
 
       resolve(version[1])
     })
