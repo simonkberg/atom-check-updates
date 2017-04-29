@@ -15,8 +15,8 @@
     "x64"
   ],
   "bin": {
-    "acu": "lib",
-    "atom-check-updates": "lib"
+    "acu": "lib/index.js",
+    "atom-check-updates": "lib/index.js"
   },
   "scripts": {
     "lint": "eslint src",
