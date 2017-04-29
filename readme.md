@@ -31,7 +31,7 @@ $ acu --beta
 $ acu --beta --force-yes
 ```
 ## license
-[MIT][license] © 2016 Simon Kjellberg
+[MIT][license] © 2016-2017 [Simon Kjellberg][simon]
 
 
 [atom-updater]: https://github.com/mehcode/atom-updater
@@ -41,3 +41,4 @@ $ acu --beta --force-yes
 [build]: https://travis-ci.org/simonkberg/atom-check-updates
 [npm-badge]: https://img.shields.io/npm/v/atom-check-updates.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/atom-check-updates
+[simon]: https://simonkjellberg.com
