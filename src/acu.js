@@ -26,13 +26,13 @@ const distro = {
   [DISTRO_DEBIAN]: {
     name: 'Debian',
     file: 'atom-amd64.deb',
-    cmd: ['dpkg', '-i']
+    cmd: ['dpkg', '-i'],
   },
   [DISTRO_RPM]: {
     name: 'RPM',
     file: 'atom.x86_64.rpm',
-    cmd: ['rpm', '-Uvh']
-  }
+    cmd: ['rpm', '-Uvh'],
+  },
 }
 
 const bin = program.beta ? 'atom-beta' : 'atom'
@@ -47,11 +47,11 @@ const format = {
   bad: chalk.red.bold,
   success: chalk.bgGreen.bold,
   error: chalk.bgRed.bold,
-  warning: chalk.bgYellow.bold
+  warning: chalk.bgYellow.bold,
 }
 
 async function detectDistro () {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     // TODO: something less ugly?
     try {
       execFileSync('/usr/bin/dpkg', ['-S', '/usr/bin/dpkg'])
@@ -70,7 +70,7 @@ async function detectDistro () {
 }
 
 async function getCurrentVersion () {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     execFile(bin, ['--version'], (error, stdout, stderr) => {
       if (error || stderr) return resolve(null)
 
@@ -82,11 +82,11 @@ async function getCurrentVersion () {
 }
 
 async function getLatestVersion () {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const opts = {
       url: RELEASES_API,
       headers: { 'User-Agent': USER_AGENT },
-      json: true
+      json: true,
     }
 
     request(opts, (err, res, body) => {
@@ -102,12 +102,12 @@ async function getLatestVersion () {
 }
 
 async function getChangelog (version) {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const opts = {
       url: 'https://git.io',
       method: 'post',
       form: { url: `${RELEASE_URL}/v${version}` },
-      headers: { 'User-Agent': USER_AGENT }
+      headers: { 'User-Agent': USER_AGENT },
     }
 
     request(opts, (err, res, body) => {
@@ -121,12 +121,12 @@ async function getChangelog (version) {
 async function download (version, distro) {
   const { good, info } = format
 
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const { file } = distro
 
     const opts = {
       url: `${DOWNLOAD_URL}/v${version}/${file}`,
-      headers: { 'User-Agent': USER_AGENT }
+      headers: { 'User-Agent': USER_AGENT },
     }
 
     try {
@@ -149,7 +149,7 @@ async function download (version, distro) {
         complete: good('='),
         incomplete: ' ',
         width: 40,
-        total: len
+        total: len,
       })
 
       res.on('data', (chunk) => bar.tick(chunk.length))
@@ -163,11 +163,11 @@ async function download (version, distro) {
 }
 
 async function install (file, distro) {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const { cmd } = distro
 
     const dpkg = spawn('sudo', [...cmd, file], {
-      stdio: ['ignore', 'inherit', 'inherit']
+      stdio: ['ignore', 'inherit', 'inherit'],
     })
 
     dpkg.on('error', (err) => reject(err))
@@ -222,8 +222,8 @@ module.exports = async function init () {
         type: 'confirm',
         name: 'confirm',
         message: `Upgrade to v${latest}?`,
-        default: false
-      }
+        default: false,
+      },
     ])
 
     if (!answer.confirm) {
