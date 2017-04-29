@@ -2,7 +2,7 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-  - "7"
+  - "node"
   - "6"
   - "4"
 before_install:
