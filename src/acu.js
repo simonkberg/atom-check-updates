@@ -1,13 +1,15 @@
 import fs from 'fs'
 import path from 'path'
+import ora from 'ora'
 import chalk from 'chalk'
 import program from 'commander'
 import inquirer from 'inquirer'
 import request from 'request'
 import Progress from 'progress'
-import {execFile, execFileSync, spawn} from 'child_process'
+import { execFile, spawn } from 'child_process'
 
 const pkg = require(path.join(__dirname, '../package.json'))
+const isTTY = process.stderr.isTTY && !process.env.CI
 
 program
   .option('-b, --beta', 'Check for beta releases')
@@ -22,7 +24,7 @@ const TEMP_FOLDER = '/tmp/acu'
 const DISTRO_DEBIAN = Symbol('deb')
 const DISTRO_RPM = Symbol('rpm')
 
-const distro = {
+const distroConfig = {
   [DISTRO_DEBIAN]: {
     name: 'Debian',
     file: 'atom-amd64.deb',
@@ -36,92 +38,88 @@ const distro = {
 }
 
 const bin = program.beta ? 'atom-beta' : 'atom'
-const log = console.log.bind(console)
 
-const format = {
-  intro: chalk.bgMagenta.bold,
-  headline: chalk.green.bold.underline,
-  info: chalk.dim.italic,
-  text: chalk.white.bold,
-  good: chalk.green.bold,
-  bad: chalk.red.bold,
-  success: chalk.bgGreen.bold,
-  error: chalk.bgRed.bold,
-  warning: chalk.bgYellow.bold,
+const getDebianConfig = () => new Promise((resolve, reject) =>
+  execFile(
+    '/usr/bin/dpkg',
+    ['-S', '/usr/bin/dpkg'],
+    err => (err ? reject(err) : resolve(distroConfig[DISTRO_DEBIAN]))
+  )
+)
+
+const getRPMConfig = () => new Promise((resolve, reject) =>
+  execFile(
+    '/usr/bin/rpm',
+    ['-q', '-f', '/usr/bin/rpm'],
+    err => (err ? reject(err) : resolve(distroConfig[DISTRO_RPM]))
+  )
+)
+
+const getDistroConfig = async () => {
+  try {
+    return await getDebianConfig()
+  } catch (e) {}
+
+  try {
+    return await getRPMConfig()
+  } catch (e) {}
+
+  return false
 }
 
-async function detectDistro () {
-  return new Promise((resolve, reject) => {
-    // TODO: something less ugly?
-    try {
-      execFileSync('/usr/bin/dpkg', ['-S', '/usr/bin/dpkg'])
+const getCurrentVersion = () =>
+  new Promise((resolve, reject) => {
+    execFile(bin, ['--version'], (err, stdout, stderr) => {
+      if (err || stderr) {
+        resolve(null)
+      } else {
+        const version = stdout.match(
+          /^Atom\s+?:\s+(\d+\.\d+\.\d+(?:-\w+\d+)?)$/im
+        )
 
-      return resolve(distro[DISTRO_DEBIAN])
-    } catch (err) {
-      try {
-        execFileSync('/usr/bin/rpm', ['-q', '-f', '/usr/bin/rpm'])
-
-        return resolve(distro[DISTRO_RPM])
-      } catch (err) {
-        return resolve(false)
+        resolve(version[1])
       }
-    }
-  })
-}
-
-async function getCurrentVersion () {
-  return new Promise((resolve, reject) => {
-    execFile(bin, ['--version'], (error, stdout, stderr) => {
-      if (error || stderr) return resolve(null)
-
-      const version = stdout.match(/^Atom\s+:\s+(\d+\.\d+\.\d+(?:-\w+\d+)?)$/m)
-
-      resolve(version[1])
     })
   })
-}
 
-async function getLatestVersion () {
-  return new Promise((resolve, reject) => {
-    const opts = {
-      url: RELEASES_API,
-      headers: { 'User-Agent': USER_AGENT },
-      json: true,
-    }
+const getLatestVersion = () =>
+  new Promise((resolve, reject) =>
+    request(
+      {
+        url: RELEASES_API,
+        headers: { 'User-Agent': USER_AGENT },
+        json: true,
+      },
+      (err, res, body) => {
+        if (err) {
+          reject(err)
+        } else {
+          const release = body.find(
+            release => release.prerelease === !!program.beta
+          )
 
-    request(opts, (err, res, body) => {
-      if (err) return reject(err)
+          resolve(release.name)
+        }
+      }
+    )
+  )
 
-      const release = body.find((release) => {
-        return release.prerelease === !!program.beta
-      })
+const getChangelog = version =>
+  new Promise((resolve, reject) =>
+    request(
+      {
+        url: 'https://git.io',
+        method: 'post',
+        form: { url: `${RELEASE_URL}/v${version}` },
+        headers: { 'User-Agent': USER_AGENT },
+      },
+      (err, res) => (err ? reject(err) : resolve(res.headers['location']))
+    )
+  )
 
-      resolve(release.name)
-    })
-  })
-}
-
-async function getChangelog (version) {
-  return new Promise((resolve, reject) => {
-    const opts = {
-      url: 'https://git.io',
-      method: 'post',
-      form: { url: `${RELEASE_URL}/v${version}` },
-      headers: { 'User-Agent': USER_AGENT },
-    }
-
-    request(opts, (err, res, body) => {
-      if (err) return reject(err)
-
-      resolve(res.headers['location'])
-    })
-  })
-}
-
-async function download (version, distro) {
-  const { good, info } = format
-
-  return new Promise((resolve, reject) => {
+const download = (version, distro) =>
+  new Promise((resolve, reject) => {
+    const { green, dim } = chalk
     const { file } = distro
 
     const opts = {
@@ -142,118 +140,130 @@ async function download (version, distro) {
     const dest = path.join(TEMP_FOLDER, `${version}-${file}`)
     const req = request(opts)
 
-    req.on('response', (res) => {
-      const len = parseInt(res.headers['content-length'], 10)
-      const tmpl = ` - ${file} [:bar] :percent ${info(':etas')}`
-      const bar = new Progress(tmpl, {
-        complete: good('='),
-        incomplete: ' ',
-        width: 40,
-        total: len,
-      })
+    req.on('response', res => {
+      if (isTTY) {
+        const len = parseInt(res.headers['content-length'], 10)
+        const tmpl = `  ${file} [${green(':bar')}] :percent ${dim(':etas')}`
+        const bar = new Progress(tmpl, {
+          complete: '=',
+          incomplete: ' ',
+          width: 40,
+          total: len,
+        })
 
-      res.on('data', (chunk) => bar.tick(chunk.length))
+        res.on('data', chunk => bar.tick(chunk.length))
+      }
+
       res.on('end', () => resolve(dest))
     })
 
-    req.on('error', (err) => reject(err))
+    req.on('error', err => reject(err))
 
     req.pipe(fs.createWriteStream(dest))
   })
-}
 
-async function install (file, distro) {
-  return new Promise((resolve, reject) => {
+const install = (file, distro) =>
+  new Promise((resolve, reject) => {
     const { cmd } = distro
 
     const dpkg = spawn('sudo', [...cmd, file], {
       stdio: ['ignore', 'inherit', 'inherit'],
     })
 
-    dpkg.on('error', (err) => reject(err))
-    dpkg.on('exit', (res) => resolve(res))
+    dpkg.on('error', err => reject(err))
+    dpkg.on('exit', res => resolve(res))
   })
-}
 
-module.exports = async function init () {
+const acu = async () => {
+  const { bold, underline, dim } = chalk
   const releaseType = program.beta ? 'beta' : 'stable'
-  const { intro, info, headline, text, success, warning, error } = format
+  const spinner = ora()
 
-  log(intro('  ✨ atom-check-updates v%s ✨  '), pkg.version, '\n')
+  spinner.info(`atom-check-updates v${pkg.version}`)
 
-  log(info('Retrieving information about your distro...'))
+  spinner.text = 'Checking distro'
+  spinner.start()
 
-  const distro = await detectDistro()
+  try {
+    const distro = await getDistroConfig()
 
-  if (!distro) {
-    log(error('You don\'t seem to be running a supported distro'))
-
-    process.exit(1)
-  }
-
-  log(text('- Detected as running on a %s-based distro.'), distro.name, '\n')
-
-  log(`${info('Checking for installed')} ${info.bold(releaseType)} ${info('version...')}`)
-
-  const current = await getCurrentVersion()
-
-  log(headline('Current version:'))
-  log(text('  - %s'), current || 'None, or older than 1.7.0', '\n')
-
-  log(`${info('Checking for latest')} ${info.bold(releaseType)} ${info('release...')}`)
-
-  const latest = await getLatestVersion()
-  const changelog = await getChangelog(latest)
-
-  log(headline('Latest version:'))
-  log(text('  - %s'), latest, `(changelog: ${changelog})\n`)
-
-  if (current === latest) {
-    log(success('You\'re already on the latest version!'))
-
-    process.exit(0)
-  }
-
-  log(warning('An update is available!'))
-
-  if (!program.forceYes) {
-    const answer = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: `Upgrade to v${latest}?`,
-        default: false,
-      },
-    ])
-
-    if (!answer.confirm) {
-      log(error('Installation aborted!'))
+    if (!distro) {
+      spinner.fail('You don\'t seem to be running a supported distro')
 
       process.exit(1)
     }
-  }
 
-  log(headline('Downloading:'))
+    spinner.succeed(`Detected as running on a ${bold(distro.name)}-based distro.`)
 
-  try {
+    spinner.text = `Checking for installed ${bold(releaseType)} version`
+    spinner.start()
+
+    const current = await getCurrentVersion()
+
+    spinner.succeed(
+      `Current ${bold(releaseType)} version: ` +
+      (current ? bold(current) : 'None, or older than 1.7.0')
+    )
+
+    spinner.text = `Checking for latest ${bold(releaseType)} release`
+    spinner.start()
+
+    const latest = await getLatestVersion()
+    const changelog = await getChangelog(latest)
+
+    if (current === latest) {
+      spinner.succeed(
+        `You're already on the latest ${bold(releaseType)} version! ` +
+        `(changelog: ${underline(changelog)})`
+      )
+
+      process.exit(0)
+    } else {
+      spinner.info(
+        `Latest ${bold(releaseType)} version: ${bold(latest)} ` +
+        `(changelog: ${underline(changelog)})`
+      )
+    }
+
+    if (!program.forceYes) {
+      if (isTTY) {
+        const answer = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'confirm',
+            message: `Upgrade to v${latest}?`,
+            default: false,
+          },
+        ])
+
+        if (!answer.confirm) {
+          spinner.fail('Installation aborted!')
+
+          process.exit(1)
+        }
+      } else {
+        spinner.fail(`Not in a TTY. Pass ${dim('--force-yes')} to continue`)
+
+        process.exit(1)
+      }
+    }
+
     const file = await download(latest, distro)
     const result = await install(file, distro)
 
     if (result === 0) {
-      log(success('Installation completed successfully!'))
+      spinner.succeed('Installation completed successfully!')
 
       fs.unlinkSync(file)
 
       process.exit(0)
     }
   } catch (err) {
-    log(error('An unexpected error occured'))
-    log(info(err.toString()))
+    spinner.fail('An unexpected error occured')
+    process.stderr.write(err.toString())
 
     process.exit(1)
   }
-
-  log(error('An unknown error occured'))
-
-  process.exit(1)
 }
+
+export default acu
