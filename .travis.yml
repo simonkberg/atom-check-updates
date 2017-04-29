@@ -10,5 +10,5 @@ before_install:
   - sudo apt-get install -y gvfs-bin libgcrypt20
 script:
   - yarn test
-  - node index.js -y
-  - node index.js -b -y
+  - node lib -y
+  - node lib -b -y
