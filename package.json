@@ -1,6 +1,6 @@
 {
   "name": "atom-check-updates",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "CLI for easily updating Atom on RPM or Debian-based systems.",
   "keywords": [
     "atom",

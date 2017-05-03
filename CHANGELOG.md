@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/simonkberg/atom-check-updates/compare/v1.0.1...v1.1.0) (2017-05-03)
+
+
+### Features
+
+* **cli:** update output messages to be clearer (#23) ([98c10fc](https://github.com/simonkberg/atom-check-updates/commit/98c10fc))
+
+
+
 <a name="1.0.1"></a>
 ## [1.0.1](https://github.com/simonkberg/atom-check-updates/compare/v1.0.0...v1.0.1) (2017-04-29)
 
