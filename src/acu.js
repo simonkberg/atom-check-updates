@@ -13,7 +13,7 @@ const isTTY = process.stderr.isTTY && !process.env.CI
 
 program
   .option('-b, --beta', 'Check for beta releases')
-  .option('-y, --force-yes', 'Update without user confirmation')
+  .option('-y, --force-yes', 'Install without user confirmation')
   .parse(process.argv)
 
 const RELEASES_API = 'https://api.github.com/repos/atom/atom/releases'
@@ -197,17 +197,17 @@ const acu = async () => {
 
     spinner.succeed(`Detected as running on a ${bold(distro.name)}-based distro.`)
 
-    spinner.text = `Checking for installed ${bold(releaseType)} version`
+    spinner.text = `Checking for installed ${bold(releaseType)} version.`
     spinner.start()
 
     const current = await getCurrentVersion()
 
     spinner.succeed(
-      `Current ${bold(releaseType)} version: ` +
+      `Installed ${bold(releaseType)} version: ` +
         (current ? bold(current) : 'None, or older than 1.7.0')
     )
 
-    spinner.text = `Checking for latest ${bold(releaseType)} release`
+    spinner.text = `Checking for latest ${bold(releaseType)} release.`
     spinner.start()
 
     const latest = await getLatestVersion()
@@ -233,18 +233,18 @@ const acu = async () => {
           {
             type: 'confirm',
             name: 'confirm',
-            message: `Upgrade to v${latest}?`,
+            message: `${current ? 'Upgrade to' : 'Install'} v${latest}?`,
             default: false,
           },
         ])
 
         if (!answer.confirm) {
-          spinner.fail('Installation aborted!')
+          spinner.fail('Installation aborted.')
 
           process.exit(1)
         }
       } else {
-        spinner.fail(`Not in a TTY. Pass ${dim('--force-yes')} to continue`)
+        spinner.fail(`Not in a TTY. Pass ${dim('--force-yes')} to continue.`)
 
         process.exit(1)
       }
@@ -254,14 +254,14 @@ const acu = async () => {
     const result = await install(file, distro)
 
     if (result === 0) {
-      spinner.succeed('Installation completed successfully!')
+      spinner.succeed('Installation completed successfully.')
 
       fs.unlinkSync(file)
 
       process.exit(0)
     }
   } catch (err) {
-    spinner.fail('An unexpected error occured')
+    spinner.fail('An unexpected error occured.')
     process.stderr.write(err.toString())
 
     process.exit(1)
