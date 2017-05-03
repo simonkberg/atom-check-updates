@@ -14,10 +14,7 @@
   "license": "MIT",
   "author": "Simon Kjellberg <simon.kjellberg@gmail.com>",
   "files": [
-    "index.js",
-    "lib/acu.js",
-    "LICENSE",
-    "readme.md"
+    "lib"
   ],
   "main": "lib",
   "bin": {
