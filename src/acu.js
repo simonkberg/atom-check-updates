@@ -39,21 +39,23 @@ const distroConfig = {
 
 const bin = program.beta ? 'atom-beta' : 'atom'
 
-const getDebianConfig = () => new Promise((resolve, reject) =>
-  execFile(
-    '/usr/bin/dpkg',
-    ['-S', '/usr/bin/dpkg'],
-    err => (err ? reject(err) : resolve(distroConfig[DISTRO_DEBIAN]))
+const getDebianConfig = () =>
+  new Promise((resolve, reject) =>
+    execFile(
+      '/usr/bin/dpkg',
+      ['-S', '/usr/bin/dpkg'],
+      err => (err ? reject(err) : resolve(distroConfig[DISTRO_DEBIAN]))
+    )
   )
-)
 
-const getRPMConfig = () => new Promise((resolve, reject) =>
-  execFile(
-    '/usr/bin/rpm',
-    ['-q', '-f', '/usr/bin/rpm'],
-    err => (err ? reject(err) : resolve(distroConfig[DISTRO_RPM]))
+const getRPMConfig = () =>
+  new Promise((resolve, reject) =>
+    execFile(
+      '/usr/bin/rpm',
+      ['-q', '-f', '/usr/bin/rpm'],
+      err => (err ? reject(err) : resolve(distroConfig[DISTRO_RPM]))
+    )
   )
-)
 
 const getDistroConfig = async () => {
   try {
@@ -188,7 +190,7 @@ const acu = async () => {
     const distro = await getDistroConfig()
 
     if (!distro) {
-      spinner.fail('You don\'t seem to be running a supported distro')
+      spinner.fail(`You don't seem to be running a supported distro`)
 
       process.exit(1)
     }
@@ -202,7 +204,7 @@ const acu = async () => {
 
     spinner.succeed(
       `Current ${bold(releaseType)} version: ` +
-      (current ? bold(current) : 'None, or older than 1.7.0')
+        (current ? bold(current) : 'None, or older than 1.7.0')
     )
 
     spinner.text = `Checking for latest ${bold(releaseType)} release`
@@ -214,14 +216,14 @@ const acu = async () => {
     if (current === latest) {
       spinner.succeed(
         `You're already on the latest ${bold(releaseType)} version! ` +
-        `(changelog: ${underline(changelog)})`
+          `(changelog: ${underline(changelog)})`
       )
 
       process.exit(0)
     } else {
       spinner.info(
         `Latest ${bold(releaseType)} version: ${bold(latest)} ` +
-        `(changelog: ${underline(changelog)})`
+          `(changelog: ${underline(changelog)})`
       )
     }
 
