@@ -195,7 +195,9 @@ const acu = async () => {
       process.exit(1)
     }
 
-    spinner.succeed(`Detected as running on a ${bold(distro.name)}-based distro.`)
+    spinner.succeed(
+      `Detected as running on a ${bold(distro.name)}-based distro.`
+    )
 
     spinner.text = `Checking for installed ${bold(releaseType)} version.`
     spinner.start()

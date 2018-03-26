@@ -2,20 +2,10 @@
   "name": "atom-check-updates",
   "version": "1.1.0",
   "description": "CLI for easily updating Atom on RPM or Debian-based systems.",
-  "keywords": [
-    "atom",
-    "cli",
-    "debian",
-    "redhat",
-    "rpm",
-    "ubuntu",
-    "update"
-  ],
+  "keywords": ["atom", "cli", "debian", "redhat", "rpm", "ubuntu", "update"],
   "license": "MIT",
   "author": "Simon Kjellberg <simon.kjellberg@gmail.com>",
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "main": "lib",
   "bin": {
     "acu": "lib/index.js",
@@ -25,12 +15,12 @@
   "scripts": {
     "build": "babel src -d lib",
     "build:watch": "nyr build -- -w",
+    "test": "yarn prettier:check && eslint .",
+    "prettier:check": "prettier --list-different '**/*.js'",
+    "prettier:format": "prettier --write '**/*.js'",
     "precommit": "lint-staged",
-    "lint": "eslint src",
-    "lint:fix": "nyr lint -- --fix",
-    "prepublish": "nyr build",
-    "release": "standard-version",
-    "test": "nyr lint"
+    "prerelease": "yarn test",
+    "release": "standard-version -s"
   },
   "lint-staged": {
     "*.js": [
@@ -39,6 +29,15 @@
       "git add"
     ]
   },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "eslintConfig": {
+    "extends": "@simonkberg/eslint-config"
+  },
+  "eslintIgnore": ["/lib"],
   "dependencies": {
     "babel-polyfill": "^6.23.0",
     "chalk": "^1.1.3",
@@ -64,11 +63,7 @@
     "node": ">=4.2.0",
     "npm": ">=2.0.0"
   },
-  "os": [
-    "linux"
-  ],
-  "cpu": [
-    "x64"
-  ],
+  "os": ["linux"],
+  "cpu": ["x64"],
   "preferGlobal": true
 }
