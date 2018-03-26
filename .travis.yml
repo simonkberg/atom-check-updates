@@ -1,13 +1,17 @@
 sudo: required
 dist: trusty
 language: node_js
+cache: yarn
 node_js:
   - "node"
-  - "6"
-  - "4"
+  - "lts/carbon"
+  - "lts/boron"
+  - "lts/argon"
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y gvfs-bin libgcrypt20
+  - sudo apt-get install -y gvfs-bin libgcrypt20 gconf2
+install:
+  - yarn --frozen-lockfile --ignore-engines
 script:
   - yarn test
   - node lib -y
