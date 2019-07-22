@@ -1,3 +1,8 @@
+# DEPRECATED
+
+Use the official linux package repositories from atom instead:
+https://flight-manual.atom.io/getting-started/sections/installing-atom/
+
 # atom-check-updates [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
 
 A CLI for easily updating [Atom][atom] to the latest version
